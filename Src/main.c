@@ -284,9 +284,6 @@ int main(void)
     HAL_TIM_IC_Start_IT(&htim8, TIM_CHANNEL_2);
     HAL_TIM_IC_Start_IT(&htim8, TIM_CHANNEL_1);
 
-    HAL_TIM_IC_Start_IT(&htim8, TIM_CHANNEL_2);
-    HAL_TIM_IC_Start_IT(&htim8, TIM_CHANNEL_1);
-
     HAL_TIM_IC_Start_IT(&htim9, TIM_CHANNEL_2);
     HAL_TIM_IC_Start_IT(&htim9, TIM_CHANNEL_1);
 
@@ -379,6 +376,15 @@ int main(void)
     copter_queue = xQueueCreate(10, sizeof(copter));
 
     _orentation_queue = xQueueCreate(10, sizeof(_orentation));
+
+    n8is_navigation_queue = xQueueCreate(10, sizeof(navigation_mes));
+
+    if ((navigation_queue == NULL) || (copter_queue == NULL) || (_orentation_queue == NULL) ||
+        (n8is_navigation_queue == NULL))
+    {
+        Error_Handler();
+        return 1;
+    }
 
     /* USER CODE END RTOS_QUEUES */
 
@@ -1513,7 +1519,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             HAL_UART_Receive_IT(&huart2, buffer_RX2, size_pack);
             xTaskNotifyFromISR(UBX_thread_id, 0x1, eSetValueWithOverwrite,
                                &xHigherPriorityTaskWoken);
-            taskYIELD();
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
             return;
         }
         else if ((huart->pRxBuffPtr - huart->RxXferSize) == buffer_RX2)
@@ -1521,7 +1527,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             HAL_UART_Receive_IT(&huart2, buffer_RX1, size_pack);
             xTaskNotifyFromISR(UBX_thread_id, 0x2, eSetValueWithOverwrite,
                                &xHigherPriorityTaskWoken);
-            taskYIELD();
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
             return;
         }
     }
@@ -1534,7 +1540,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             HAL_UART_Receive_IT(&huart3, buffer_RX2_n8is, size_pack_n8is);
             xTaskNotifyFromISR(n8is_thread_id, 0x1, eSetValueWithOverwrite,
                                &xHigherPriorityTaskWoken);
-            taskYIELD();
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
             return;
         }
         else if ((huart->pRxBuffPtr - huart->RxXferSize) == buffer_RX2_n8is)
@@ -1542,7 +1548,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
             HAL_UART_Receive_IT(&huart3, buffer_RX1_n8is, size_pack_n8is);
             xTaskNotifyFromISR(n8is_thread_id, 0x2, eSetValueWithOverwrite,
                                &xHigherPriorityTaskWoken);
-            taskYIELD();
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
             return;
         }
     }
@@ -1558,13 +1564,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         {
             xTaskNotifyFromISR(NRF24_thread_id, 0x1, eSetValueWithOverwrite,
                                &xHigherPriorityTaskWoken);
-            taskYIELD();
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
         else if (nrf.interrupt_stat == 1)
         {
             xTaskNotifyFromISR(NRF24_thread_id, 0x02, eSetValueWithOverwrite,
                                &xHigherPriorityTaskWoken);
-            taskYIELD();
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     }
 }
@@ -1835,7 +1841,7 @@ void nav_thread(void const *argument)
 void PID_thread(void const *argument)
 {
     double angle[3] = {0.0, 0.0, 0.0};
-    uint16_t m_power[6];
+    uint16_t m_power[6] = {1000, 1000, 1000, 1000, 1000, 1000};
     // osDelay(2000);
     // uint8_t str[300];
     adapt_gps3_initialize();

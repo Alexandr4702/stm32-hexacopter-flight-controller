@@ -153,95 +153,39 @@ void PID__(__IO uint16_t *uhDutyCycle, double *c_anlge /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿
 
 void angle_to_pwm(float *PID, __IO uint16_t *uhDutyCycle, uint16_t *motor_power)
 {
-    uint16_t m_power[6];
+    const uint16_t stopped_pwm = 1000;
+    const float minimum_pwm = 1150.0f;
+    const float maximum_pwm = 1950.0f;
 
-    m_power[0] = uhDutyCycle[2] + PID[1] + PID[2] - PID[0];
-    m_power[1] = uhDutyCycle[2] - PID[1] - PID[0];
-    m_power[2] = uhDutyCycle[2] + PID[1] - PID[2] - PID[0];
-    m_power[3] = uhDutyCycle[2] - PID[1] - PID[2] + PID[0];
-    m_power[4] = uhDutyCycle[2] + PID[1] + PID[0];
-    m_power[5] = uhDutyCycle[2] - PID[1] + PID[2] + PID[0];
-
-    if (uhDutyCycle[2] < 1000 && uhDutyCycle[2] > 2000)
-        uhDutyCycle[2] = 1400;
-
-    //___________________________________________________________________________________________________________________
-    if (((m_power[0]) < 1950) && ((m_power[0] > 1150))) // motor_1
+    if ((uhDutyCycle[2] < 1000U) || (uhDutyCycle[2] > 2000U))
     {
-        motor_power[0] = m_power[0]; // motor_1;
-    }
-    else
-    {
-        if ((m_power[0] < 1150))
-            m_power[0] = 1149;
-        if ((m_power[0] > 1950))
-            m_power[0] = 1949;
-    }
-    //___________________________________________________________________________________________________________________
-
-    if (((m_power[1]) < 1950) && ((m_power[1]) > 1150)) // motor_2
-    {
-        motor_power[1] = m_power[1]; // motor_2;
-    }
-    else
-    {
-        if ((m_power[1]) < 1150)
-            motor_power[1] = 1149;
-        if ((m_power[1]) > 1950)
-            motor_power[1] = 1949;
-    }
-    //___________________________________________________________________________________________________________________
-
-    if (((m_power[2]) < 1950) && ((m_power[2]) > 1150)) // motor_3
-    {
-        motor_power[2] = m_power[2]; // motor_3;
-    }
-    else
-    {
-        if ((m_power[2]) < 1150)
-            motor_power[2] = 1149;
-        if ((m_power[2]) > 1950)
-            motor_power[2] = 1949;
+        for (uint8_t i = 0; i < 6; i++)
+        {
+            motor_power[i] = stopped_pwm;
+        }
+        return;
     }
 
-    //___________________________________________________________________________________________________________________
+    float mixed_power[6];
+    mixed_power[0] = uhDutyCycle[2] + PID[1] + PID[2] - PID[0];
+    mixed_power[1] = uhDutyCycle[2] - PID[1] - PID[0];
+    mixed_power[2] = uhDutyCycle[2] + PID[1] - PID[2] - PID[0];
+    mixed_power[3] = uhDutyCycle[2] - PID[1] - PID[2] + PID[0];
+    mixed_power[4] = uhDutyCycle[2] + PID[1] + PID[0];
+    mixed_power[5] = uhDutyCycle[2] - PID[1] + PID[2] + PID[0];
 
-    if (((m_power[3]) < 1950) && ((m_power[3]) > 1150)) // motor_4
+    for (uint8_t i = 0; i < 6; i++)
     {
-        motor_power[3] = m_power[3]; // motor_4;
-    }
-    else
-    {
-        if ((m_power[3]) < 1150)
-            motor_power[3] = 1149;
-        if ((m_power[3]) > 1950)
-            motor_power[3] = 1949;
-    }
-    //___________________________________________________________________________________________________________________
-
-    if (((m_power[4]) < 1950) && ((m_power[4]) > 1150)) // motor_5
-    {
-        motor_power[4] = m_power[4]; // motor_5;
-    }
-    else
-    {
-        if ((m_power[4]) < 1150)
-            motor_power[4] = 1149;
-        if ((m_power[4]) > 1950)
-            motor_power[4] = 1949;
-    }
-    //___________________________________________________________________________________________________________________
-
-    if (((m_power[5]) < 1950) && ((m_power[5]) > 1150)) // motor_6
-    {
-        motor_power[5] = m_power[5]; // motor_1;
-    }
-    else
-    {
-        if ((m_power[5]) < 1150)
-            motor_power[5] = 1149;
-        if ((m_power[5]) > 1950)
-            motor_power[5] = 1949;
+        float limited_power = mixed_power[i];
+        if (limited_power < minimum_pwm)
+        {
+            limited_power = minimum_pwm;
+        }
+        else if (limited_power > maximum_pwm)
+        {
+            limited_power = maximum_pwm;
+        }
+        motor_power[i] = (uint16_t)limited_power;
     }
 
     //---------------------------------------------------------------------------------------
