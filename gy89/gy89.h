@@ -13,24 +13,18 @@
 #include "LSM303D.h"
 #include "l3gd20.h"
 
-
 typedef struct
 {
-	I2C_HandleTypeDef* i2c;
+    I2C_HandleTypeDef *i2c;
 
-
-
-}gy89i2c;
+} gy89i2c;
 
 typedef struct
 {
 
+} gy89spi;
 
-}gy89spi;
-
-
-gy89i2c InitHandle_gy89(I2C_HandleTypeDef* i2c);
-uint8_t InitGy89(gy89i2c* handle);
-
+gy89i2c InitHandle_gy89(I2C_HandleTypeDef *i2c);
+uint8_t InitGy89(gy89i2c *handle);
 
 #endif /* GY89_H_ */

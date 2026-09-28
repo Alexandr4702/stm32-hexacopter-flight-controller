@@ -10,10 +10,8 @@
 
 #include "stm32f7xx_hal.h"
 
+#define bmp180_addr 0xEE
 
-#define bmp180_addr	0xEE
-
-uint8_t Init_bmp180(I2C_HandleTypeDef* i2c);
-
+uint8_t Init_bmp180(I2C_HandleTypeDef *i2c);
 
 #endif /* BMP180_H_ */
