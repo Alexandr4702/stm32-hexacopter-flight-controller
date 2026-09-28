@@ -271,13 +271,15 @@ uint8_t NRF24L01_Send_freertos_irq(nrf_handle *nrf, uint8_t *pBuf)
 void NRF24L01_Receive(nrf_handle *nrf, void *RX_BUF)
 {
     uint8_t status = 0x01;
-    uint16_t cnt = 0;
+    uint32_t wait_started = HAL_GetTick();
     GPIO_PinState k = HAL_GPIO_ReadPin(nrf->PORT_IRQ, nrf->PIN_IRQ);
-    while ((k == GPIO_PIN_SET) /*&&(cnt<1000)*/)
+    while (k == GPIO_PIN_SET)
     {
+        if ((HAL_GetTick() - wait_started) >= 10U)
+        {
+            return;
+        }
         k = HAL_GPIO_ReadPin(nrf->PORT_IRQ, nrf->PIN_IRQ);
-        // status = NRF24_ReadReg(nrf,STATUS);
-        cnt++;
     }
     status = NRF24_ReadReg(nrf, STATUS);
     if (status & 0x40)
@@ -339,43 +341,47 @@ void NRF24L01_Send_NO_AA(nrf_handle *nrf, uint8_t *pBuf)
 
 void NRF24L01_Send_N_byte_no_aa(nrf_handle *nrf, uint8_t *ptr, uint16_t n)
 {
-    // uint16_t cnt_mes=n/TX_PLOAD_WIDTH;
-    int i = 0;
+    uint16_t offset = 0;
     uint8_t buff[32] = {0x10, 0x10};
     memcpy(buff + 2, &n, 2);
     buff[4] = checksum((char *)ptr, n);
-    memcpy(buff + 5, ptr, 32 - 5);
+    uint16_t chunk_size = n < (TX_PLOAD_WIDTH - 5U) ? n : (TX_PLOAD_WIDTH - 5U);
+    memcpy(buff + 5, ptr, chunk_size);
     NRF24L01_Send_NO_AA(nrf, buff);
-    i += 32 - 5;
+    offset += chunk_size;
 
-    for (; i < (n - 32); i += 32)
+    while (offset < n)
     {
-        NRF24L01_Send_NO_AA(nrf, ptr + i);
+        memset(buff, 0, sizeof(buff));
+        chunk_size = (n - offset) < TX_PLOAD_WIDTH ? (n - offset) : TX_PLOAD_WIDTH;
+        memcpy(buff, ptr + offset, chunk_size);
+        NRF24L01_Send_NO_AA(nrf, buff);
+        offset += chunk_size;
     }
-    memcpy(buff, ptr + i, n - i);
-    NRF24L01_Send_NO_AA(nrf, buff);
 }
 
 void NRF24L01_Send_N_byte_no_aa_2CRC(nrf_handle *nrf, uint8_t *ptr, uint16_t n)
 {
-    // uint16_t cnt_mes=n/TX_PLOAD_WIDTH;
-    int i = 0;
+    uint16_t offset = 0;
     uint8_t buff[32] = {0x10, 0x10};
     memcpy(buff + 2, &n, 2);
     //---------------------------------------------------
-    buff[4] = checksum((char *)ptr, n);
-    *((uint16_t *)(buff + 4)) = UBX_checksum((uint8_t *)ptr, n);
+    uint16_t crc = UBX_checksum((uint8_t *)ptr, n);
+    memcpy(buff + 4, &crc, sizeof(crc));
     //---------------------------------------------------
-    memcpy(buff + 6, ptr, 32 - 6);
+    uint16_t chunk_size = n < (TX_PLOAD_WIDTH - 6U) ? n : (TX_PLOAD_WIDTH - 6U);
+    memcpy(buff + 6, ptr, chunk_size);
     NRF24L01_Send_NO_AA(nrf, buff);
-    i += 32 - 6;
+    offset += chunk_size;
 
-    for (; i < (n - 32); i += 32)
+    while (offset < n)
     {
-        NRF24L01_Send_NO_AA(nrf, ptr + i);
+        memset(buff, 0, sizeof(buff));
+        chunk_size = (n - offset) < TX_PLOAD_WIDTH ? (n - offset) : TX_PLOAD_WIDTH;
+        memcpy(buff, ptr + offset, chunk_size);
+        NRF24L01_Send_NO_AA(nrf, buff);
+        offset += chunk_size;
     }
-    memcpy(buff, ptr + i, n - i);
-    NRF24L01_Send_NO_AA(nrf, buff);
 }
 //------------------------------------------------
 
