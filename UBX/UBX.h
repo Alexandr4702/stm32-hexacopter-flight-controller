@@ -33,7 +33,7 @@ enum
 {
     class_ = 0x1,
     ID = 0x2,
-    lentgh = 0x3,
+    length = 0x3,
     payload = 0x4,
     checksum_ = 0x5
 };
@@ -98,8 +98,6 @@ typedef struct
 } navigation_mes;
 
 void UBX_init(void);
-void ONE_PACKET_RECIVE(void);
-void received_mes(void);
 void pars(uint8_t *ptr, uint16_t cnt_bytes, navigation_mes *mes);
 
 #endif /* UBX_H_ */

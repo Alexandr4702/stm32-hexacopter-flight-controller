@@ -202,10 +202,6 @@ int main(void)
 {
     /* USER CODE BEGIN 1 */
 
-    uint8_t dt_reg;
-    char str1[50] = {0};
-    uint8_t buf1[20] = {0};
-
     nrf = init_nrf_handle(&hspi2, NRF_CS_GPIO_Port, NRF_CS_Pin, NRF_CE_GPIO_Port, NRF_CE_Pin,
                           NRF_IRQ_GPIO_Port, NRF_IRQ_Pin);
 
@@ -294,39 +290,12 @@ int main(void)
     HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_1);
     //---------------------------------------------------------------------
 
-    //----------------------------------------------------------------------
-
     NRF24_ini(&nrf);
-    dt_reg = NRF24_ReadReg(&nrf, CONFIG);
-    sprintf(str1, "CONFIG: 0x%02X\r\n", dt_reg);
-    HAL_UART_Transmit(&huart1, (uint8_t *)str1, strlen(str1), 0x1000);
-    dt_reg = NRF24_ReadReg(&nrf, EN_AA);
-    sprintf(str1, "EN_AA: 0x%02X\r\n", dt_reg);
-    HAL_UART_Transmit(&huart1, (uint8_t *)str1, strlen(str1), 0x1000);
-    dt_reg = NRF24_ReadReg(&nrf, EN_RXADDR);
-    sprintf(str1, "EN_RXADDR: 0x%02X\r\n", dt_reg);
-    HAL_UART_Transmit(&huart1, (uint8_t *)str1, strlen(str1), 0x1000);
-    dt_reg = NRF24_ReadReg(&nrf, STATUS);
-    sprintf(str1, "STATUS: 0x%02X\r\n", dt_reg);
-    HAL_UART_Transmit(&huart1, (uint8_t *)str1, strlen(str1), 0x1000);
-    dt_reg = NRF24_ReadReg(&nrf, RF_SETUP);
-    sprintf(str1, "RF_SETUP: 0x%02X\r\n", dt_reg);
-    HAL_UART_Transmit(&huart1, (uint8_t *)str1, strlen(str1), 0x1000);
-    NRF24_Read_Buf(&nrf, TX_ADDR, buf1, 3);
-    sprintf(str1, "TX_ADDR: 0x%02X, 0x%02X, 0x%02X\r\n", buf1[0], buf1[1], buf1[2]);
-    HAL_UART_Transmit(&huart1, (uint8_t *)str1, strlen(str1), 0x1000);
-    NRF24_Read_Buf(&nrf, RX_ADDR_P0, buf1, 3);
-    sprintf(str1, "RX_ADDR: 0x%02X, 0x%02X, 0x%02X\r\n", buf1[0], buf1[1], buf1[2]);
-    HAL_UART_Transmit(&huart1, (uint8_t *)str1, strlen(str1), 0x1000);
 
     uint8_t gy_init = InitGy89(&gy89);
     uint8_t adis_init = init_ADIS();
 
-    sprintf(str1, "gy_89 init %hu  adis init %hu \r\n", gy_init, adis_init);
-    HAL_UART_Transmit(&huart1, (uint8_t *)str1, strlen(str1), 0x1000);
     HAL_GPIO_WritePin(GPIOF, GPIO_PIN_4, gy_init & adis_init);
-
-    //-----------
 
     /* USER CODE END 2 */
 
@@ -1498,11 +1467,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
     {
         int strlength = sprintf((char *)str, "error %lu \r\n", huart->ErrorCode);
 
-        if (((huart->ErrorCode & HAL_UART_ERROR_FE) == HAL_UART_ERROR_FE) ||
-            ((huart->ErrorCode & HAL_UART_ERROR_PE) == HAL_UART_ERROR_PE))
-        {
-            // UBX_init();
-        }
         HAL_UART_Transmit(&huart1, str, strlength, 0xff);
         HAL_UART_Receive_IT(&huart2, buffer_RX1, size_pack);
     }
@@ -1579,8 +1543,6 @@ void UBX_thread(void const *argument)
 {
 
     uint32_t signals = 0x00;
-    uint8_t str[100];
-    // uint32_t cnt=0;
     BaseType_t ret = 0;
 
     uint16_t readed;
@@ -1589,9 +1551,6 @@ void UBX_thread(void const *argument)
     uint16_t readed_pr = 0;
 
     navigation_mes mes;
-    uint8_t n_mes_cnt = 0;
-
-    int strlength = 0;
     osDelay(2000);
 
     UBX_init();
@@ -1613,17 +1572,12 @@ void UBX_thread(void const *argument)
                 pars(buffer_RX2 + readed_pr, readed - readed_pr, &mes);
                 break;
             }
-            //----------------------------------------------------------------------------------------
-
             if ((mes._mess_ready & 0xf) == 0xf)
             {
 
                 xQueueSend(navigation_queue, (void *)&mes, 0);
                 mes._mess_ready = 0x00;
             }
-            //----------------------------------------------------------------------------------------
-            // strlength=sprintf((char*)str,"%lu %u
-            // \r\n",signals,readed-readed_pr);//mes._mess_ready==(_NAV_VELNED_ready|_NAV_DOP_ready|_NAV_STATUS_ready|_NAV_POSLLH_ready)
             readed_pr = 0;
         }
         else
@@ -1633,69 +1587,31 @@ void UBX_thread(void const *argument)
             if ((huart_ptr - readed) == buffer_RX1)
             {
                 pars(buffer_RX1 + readed_pr, readed - readed_pr, &mes);
-                // strlength=sprintf((char*)str,"buffer_RX1 %3u  %3u %04x
-                // \r\n",readed-readed_pr,readed,mes._mess_ready);
             }
             else if ((huart_ptr - readed) == buffer_RX2)
             {
                 pars(buffer_RX2 + readed_pr, readed - readed_pr, &mes);
-                // strlength=sprintf((char*)str,"buffer_RX2 %3u  %3u %04x
-                // \r\n",readed-readed_pr,readed,mes._mess_ready);
             }
 
-            //----------------------------------------------------------------------------------------
             if ((mes._mess_ready & 0xf) == 0xf)
             {
                 xQueueSend(navigation_queue, (void *)&mes, 0);
                 mes._mess_ready = 0x00;
             }
-
-            //----------------------------------------------------------------------------------------
             readed_pr = readed;
         }
-        // HAL_UART_Transmit_DMA(&huart1,str,strlength);
     }
 }
 
 void NRF24_thread(void const *argument)
 {
-    uint8_t buff[32];
-    uint8_t buff_temp[32];
-
-    BaseType_t ret = 0;
-
-    int strlength;
-    uint8_t str[100];
-    uint8_t crc;
-
-    uint16_t error_cnt = 0;
-
     HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
     NRF24_Write_Buf(&nrf, TX_ADDR, TX_ADDRESS, TX_ADR_WIDTH);
     NRF24_Write_Buf(&nrf, RX_ADDR_P0, RX_ADDRESS, TX_ADR_WIDTH);
 
-    uint32_t signals = 0x00;
-    navigation_mes nav;
-    copter cp;
-
     for (;;)
     {
-        /*
-        xQueueReceive(  navigation_queue,(void*)&nav,portMAX_DELAY );
-
-        strlength=sprintf((char*)str,"crc  %8lu longitude %13.6f latitude %13.6f gps fix %hu
-        %x\r\n", nav._NAV_STATUS_.time_since_restart_ms, nav._NAV_POSLLH_.longitude,
-                nav._NAV_POSLLH_.latitude,
-                nav._NAV_STATUS_.gpsFix,
-                nav._mess_ready);
-        HAL_UART_Transmit_DMA(&huart1,str,strlength);
-
-
-
-        xQueueReceive( copter_queue,(void*)&cp,portMAX_DELAY );
-        NRF24L01_Send_N_byte_no_aa(&nrf,(uint8_t*)&cp,sizeof(cp));
-  */
         osDelay(1000);
     }
 }
@@ -1706,16 +1622,7 @@ void gy89_thread(void const *argument)
     double mag[3];
     double gyro[3];
 
-    uint8_t str[300];
-
-    int strlength = 0;
-
     TickType_t tick;
-
-    /*
-          strlength=sprintf((char*)str,"AdisWx AdisWy AdisWz AdisAx AdisAy AdisAz Gy89Wx Gy89Wy
-       Gy89Wz Gy89Ax Gy89Ay Gy89Az \r\n"); HAL_UART_Transmit(&huart1,str,strlength,0xff);
-    */
 
     _orentation A_GY;
     ADIS_DATA data;
@@ -1746,18 +1653,6 @@ void gy89_thread(void const *argument)
         A_GY.Gy.W_gy[1] = -gyro[0] * M_PI / 180.0;
         A_GY.Gy.W_gy[2] = gyro[1] * M_PI / 180.0;
 
-        /*
-        strlength= sprintf((char*)str,
-                "%10.5f %10.5f %10.5f| "
-                "%10.5f %10.5f %10.5f|"
-                "%10.5f %10.5f %10.5f|"
-                "%10.5f %10.5f %10.5f \r\n",
-                A_GY.A.A_a[0],A_GY.A.A_a[1],A_GY.A.A_a[2],
-                A_GY.A.W_a[0],A_GY.A.W_a[1],A_GY.A.W_a[2],
-                A_GY.Gy.A_gy[0],A_GY.Gy.A_gy[1],A_GY.Gy.A_gy[2],
-                A_GY.Gy.W_gy[0],A_GY.Gy.W_gy[1],A_GY.Gy.W_gy[2]);
-
-      */
         xQueueSend(_orentation_queue, (void *)&A_GY, 0);
 
         vTaskDelayUntil(&tick, 10);
@@ -1840,22 +1735,11 @@ void nav_thread(void const *argument)
 
 void PID_thread(void const *argument)
 {
-    double angle[3] = {0.0, 0.0, 0.0};
     uint16_t m_power[6] = {1000, 1000, 1000, 1000, 1000, 1000};
-    // osDelay(2000);
-    // uint8_t str[300];
     adapt_gps3_initialize();
 
     for (;;)
     {
-
-        // xQueueReceive(  orientation_queue,(void*)angle,portMAX_DELAY );
-        // PID__(uhDutyCycle,angle,m_power);
-
-        // adapt_gps3();
-
-        // int strlength=sprintf((char*)str,"%15.5f %15.5f %15.5f \r\n
-        // ",angle[0],angle[1],angle[2]); HAL_UART_Transmit_DMA(&huart1,str,strlength);
 
         TIM2->CCR1 = m_power[0];
         TIM2->CCR2 = m_power[1];
@@ -1872,8 +1756,6 @@ void n8is_thread(void const *argument)
 {
 
     uint32_t signals = 0x00;
-    uint8_t str[100];
-    // uint32_t cnt=0;
     BaseType_t ret = 0;
 
     uint16_t readed;
@@ -1882,9 +1764,6 @@ void n8is_thread(void const *argument)
     uint16_t readed_pr = 0;
 
     GPS_DATA mes;
-    uint8_t n_mes_cnt = 0;
-
-    int strlength = 0;
     osDelay(2000);
 
     HAL_NVIC_EnableIRQ(USART2_IRQn);
@@ -1905,17 +1784,12 @@ void n8is_thread(void const *argument)
                 pars_N8IS(buffer_RX2_n8is + readed_pr, readed - readed_pr, &mes);
                 break;
             }
-            //----------------------------------------------------------------------------------------
-
             if ((mes._mess_ready & 0xf) == 0xf)
             {
 
                 xQueueSend(navigation_queue, (void *)&mes, 0);
                 mes._mess_ready = 0x00;
             }
-            //----------------------------------------------------------------------------------------
-            // strlength=sprintf((char*)str,"%lu %u
-            // \r\n",signals,readed-readed_pr);//mes._mess_ready==(_NAV_VELNED_ready|_NAV_DOP_ready|_NAV_STATUS_ready|_NAV_POSLLH_ready)
             readed_pr = 0;
         }
         else
@@ -1925,27 +1799,19 @@ void n8is_thread(void const *argument)
             if ((huart_ptr - readed) == buffer_RX1_n8is)
             {
                 pars_N8IS(buffer_RX1_n8is + readed_pr, readed - readed_pr, &mes);
-                // strlength=sprintf((char*)str,"buffer_RX1_n8is %3u  %3u %04x
-                // \r\n",readed-readed_pr,readed,mes._mess_ready);
             }
             else if ((huart_ptr - readed) == buffer_RX2_n8is)
             {
                 pars_N8IS(buffer_RX2_n8is + readed_pr, readed - readed_pr, &mes);
-                // strlength=sprintf((char*)str,"buffer_RX2_n8is %3u  %3u %04x
-                // \r\n",readed-readed_pr,readed,mes._mess_ready);
             }
 
-            //----------------------------------------------------------------------------------------
             if ((mes._mess_ready & 0xf) == 0xf)
             {
                 xQueueSend(n8is_navigation_queue, (void *)&mes, 0);
                 mes._mess_ready = 0x00;
             }
-
-            //----------------------------------------------------------------------------------------
             readed_pr = readed;
         }
-        // HAL_UART_Transmit_DMA(&huart1,str,strlength);
     }
 }
 
@@ -1972,11 +1838,6 @@ void StartDefaultTask(void const *argument)
         osThreadTerminate(defaultTaskHandle);
 
         osDelay(100);
-        // xTaskNotify(NRF24_thread_id,0x1,eSetValueWithOverwrite);
-        /*
-        vTaskDelayUntil();
-      xTaskGetTickCount();
-      */
     }
     /* USER CODE END 5 */
 }

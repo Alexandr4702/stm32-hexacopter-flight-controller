@@ -64,13 +64,12 @@ enum
     end_of_message = 0x03,
     start_CRC = 0xff,
     dec = 0x10
-} service_message;
+};
 
 uint8_t GPS_Check_connection(void);
 void GPS_Restart(uint8_t temp); // if temp=0 then cold restart,else warm
 uint8_t GPS_Init(void);
 uint32_t pars_N8IS(uint8_t *ptr, uint16_t cnt_bytes, GPS_DATA *GPS_out);
 char checksum(char *data, int size);
-void ONE_PACKET_RECIVE(void);
 
 #endif /* GPS_H_ */

@@ -9,10 +9,7 @@
 #include "stm32f7xx_hal.h"
 #include <string.h>
 
-// extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef UART_UBX;
-
-uint8_t recived_mes = 0;
 
 uint16_t UBX_checksum(uint8_t *ptr, uint16_t len)
 {
@@ -49,29 +46,11 @@ void UBX_read_reg(uint8_t class, uint8_t ID, uint8_t *data, int16_t len_payload)
     uint16_t crc = UBX_checksum(tx_mess + 2, len + 1 + 1 + 2);
     memcpy(&tx_mess[len + 6], &crc, 2);
     HAL_UART_Transmit(&UART_UBX, tx_mess, 8, 0xff);
-    if (HAL_UART_Receive(&UART_UBX, data, 8 + len_payload, 0xffff) == HAL_OK)
-    {
-        //		HAL_UART_Transmit(&huart1,data,8+len_payload,0xffff);
-    }
+    HAL_UART_Receive(&UART_UBX, data, 8 + len_payload, 0xffff);
 }
 
 void UBX_init(void)
 {
-    /*
-    uint8_t RMC_Off[] = {0xF0,0x04,0x00};
-    uint8_t VTG_Off[] = {0xF0,0x05,0x00};
-    uint8_t GSA_Off[] = {0xF0,0x02,0x00};
-    uint8_t GSV_Off[] = {0xF0,0x03,0x00};
-    uint8_t GLL_Off[] = {0xF0,0x01,0x00};
-    uint8_t GGA_Off[] = {0xF0,0x00,0x00};
-
-    UBX_write_reg(0x06,0x01,RMC_Off,3);
-    UBX_write_reg(0x06,0x01,VTG_Off,3);
-    UBX_write_reg(0x06,0x01,GGA_Off,3);
-    UBX_write_reg(0x06,0x01,GSA_Off,3);
-    UBX_write_reg(0x06,0x01,GSV_Off,3);
-    UBX_write_reg(0x06,0x01,GLL_Off,3);
-    */
     uint8_t NAV_POSLLH_on[] = {0x01, 0x02, 0x01};
     uint8_t NAV_VELNED_on[] = {0x01, 0x12, 0x01};
     uint8_t NAV_STATUS_on[] = {0x01, 0x03, 0x01};
@@ -87,7 +66,7 @@ void UBX_init(void)
                          0x07, 0x00,             // inProtoMask
                          0x01, 0x00,             // outProtoMask| only ubx
                          0x00, 0x00,             // flags
-                         0x00, 0x00};            // reservd
+                         0x00, 0x00};            // reserved
     HAL_Delay(10);
     UBX_write_reg(0x06, 0x00, CFG_PRT, 20);
     UART_UBX.Init.BaudRate = 115200;
@@ -101,43 +80,6 @@ void UBX_init(void)
 
     UBX_write_reg(0x06, 0x08, CFG_RATE, 6);
 }
-/*
-void ONE_PACKET_RECIVE(void)
-{
-    static uint8_t init_mes=0;
-    static uint8_t reciving_mes=0;
-    int16_t len_t;
-    if(recived_mes==1)return;
-    if(reciving_mes)
-    {
-        recived_mes=1;
-        reciving_mes=0;
-        return;
-    }
-    switch(init_mes)
-    {
-    case 0:
-        if(rx_buff[0]==0xb5){init_mes++;HAL_UART_Receive_DMA(&UART_UBX,rx_buff,1);}
-        else init_mes=0;
-        break;
-    case 1:
-        if(rx_buff[0]==0x62){init_mes++;HAL_UART_Receive_DMA(&UART_UBX,rx_buff,4);}
-        else init_mes=0;
-        break;
-    case 2:
-        memcpy(&len_t,rx_buff+2,2);
-        HAL_UART_Receive_DMA(&UART_UBX,rx_buff+4,(uint16_t)len_t+2);
-        init_mes=0;
-        reciving_mes=1;
-        break;
-    default:
-        init_mes=0;
-        reciving_mes=0;
-        break;
-
-    }
-}
-*/
 NAV_POSLLH_ handler_NAV_POSLLH(uint8_t *ptr)
 {
     NAV_POSLLH_ ret;
@@ -184,15 +126,12 @@ void pars(uint8_t *ptr, uint16_t cnt_bytes, navigation_mes *mes)
     static uint8_t ident_cnt = 0;
     static uint8_t part_message = 0x00;
     static uint8_t class__message = 0x00;
-    static uint8_t ID_message = 0x00; // TODO мб объеденить с классом;
+    static uint8_t ID_message = 0x00;
     static uint16_t length_message = 0x00;
     static uint16_t checksum_message = 0x00;
     static uint16_t checksum_calc = 0x00;
 
     static uint16_t need_read = 0;
-
-    static uint16_t error_cnt = 0x00;
-    static uint16_t mess_cnt = 0x00;
 
     for (uint16_t i = 0; i < cnt_bytes; i++)
     {
@@ -218,10 +157,10 @@ void pars(uint8_t *ptr, uint16_t cnt_bytes, navigation_mes *mes)
                 break;
             case ID:
                 ID_message = ptr[i];
-                part_message = lentgh;
+                part_message = length;
                 need_read = 2;
                 break;
-            case lentgh:
+            case length:
                 length_message |= (need_read == 2) ? ptr[i] : ptr[i] << 8; // слева направо
                 need_read--;
                 if (need_read == 0)
@@ -234,7 +173,6 @@ void pars(uint8_t *ptr, uint16_t cnt_bytes, navigation_mes *mes)
                         ident_cnt = 0x00;
                         length_message = 0x00;
                         checksum_message = 0x00;
-                        error_cnt++;
                         mes->_mess_ready |= 16;
                     } // обнуление переменных
                 }
@@ -257,12 +195,9 @@ void pars(uint8_t *ptr, uint16_t cnt_bytes, navigation_mes *mes)
                     rx_buf[1] = ID_message;
                     rx_buf[2] = 0x00ff & length_message;
                     rx_buf[3] = length_message >> 8; // заполнение для счета контрольной суммы
-                    //______________________________________________________________________________________________________________________________________
                     checksum_calc = UBX_checksum(rx_buf, 4 + length_message);
                     if (checksum_message == checksum_calc)
                     {
-                        // printf("message %hu errors %hu ID %hhx
-                        // \r\n",mess_cnt,error_cnt,ID_message);
                         switch (ID_message)
                         {
                         case NAV_POSLLH:
@@ -282,14 +217,11 @@ void pars(uint8_t *ptr, uint16_t cnt_bytes, navigation_mes *mes)
                             mes->_mess_ready |= 8;
                             break;
                         }
-                        mess_cnt++;
                     }
                     else
                     {
-                        error_cnt++;
                         mes->_mess_ready |= 16;
                     }
-                    //_____________________________________________________________________________________________________________________________________________
                     part_message = 0x00;
                     ident_cnt = 0x00;
                     length_message = 0x00;

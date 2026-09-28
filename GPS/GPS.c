@@ -11,14 +11,6 @@
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 
-uint8_t GPS_flag_flag_dec = 0;
-
-uint16_t i;
-uint8_t flag_error = 0;
-__IO uint8_t buff;
-void ONE_BUTE_RECIVE(void);
-__INLINE void ONE_PACKET_RECIVE(void);
-
 #define trans(a) ((a & 0x00FF) << 8) | ((a & 0xFF00) >> 8)
 
 uint16_t Table_CRC[256] = {
@@ -138,9 +130,6 @@ uint8_t GPS_Init(void)
 {
 
     HAL_NVIC_EnableIRQ(USART3_IRQn); // для инициализации gps необходимы прерывания по приему
-    uint8_t RX[20];
-    uint8_t str[50];
-
     GPS_Restart(0);
 
     if (GPS_Check_connection() == 0)
@@ -168,14 +157,11 @@ uint32_t pars_N8IS(uint8_t *ptr, uint16_t cnt_bytes, GPS_DATA *GPS_out)
 {
     static uint8_t flag_dec = 0;
     static uint8_t flag_mess = 0;
-    static uint8_t flag_crc = 0;
 
     uint8_t buff[200];
-    static uint16_t crc_recived = 0;
     static uint16_t crc = 0;
 
     static uint32_t mess_cnt = 0;
-    static uint32_t error_cnt = 0;
 
     static uint16_t length_read = 0;
 
@@ -252,7 +238,6 @@ uint32_t pars_N8IS(uint8_t *ptr, uint16_t cnt_bytes, GPS_DATA *GPS_out)
                     GPS_out->_mess_ready = 1;
                     mess_cnt++;
                     return GPS_out->_mess_ready;
-                    break;
                 }
             }
             add_CRC(&crc, ptr[i]);
@@ -260,10 +245,5 @@ uint32_t pars_N8IS(uint8_t *ptr, uint16_t cnt_bytes, GPS_DATA *GPS_out)
         }
     }
 
-    //--------------------------------------------------------------------------------------------
-    /*
-
-        if(crc_recived!=crc)error_cnt++;
-        */
     return GPS_out->_mess_ready;
 }
