@@ -120,7 +120,8 @@ arming, loss-of-signal handling, and emergency shutdown.
 - `ADIS/`, `gy89/` — inertial and environmental sensor drivers
 - `GPS/`, `UBX/` — navigation protocols and parsers
 - `NRF24L01/` — radio driver
-- `quateradapt/` — orientation estimation
+- `quateradapt/` — compatibility stub for a legacy estimator whose
+  implementation is intentionally omitted from this code sample
 - `adapt_gps3/` — generated navigation algorithm
 - `Middlewares/`, `Drivers/` — FreeRTOS, STM32 HAL, and CMSIS
 - `copter_GPs.ioc` — STM32CubeMX configuration

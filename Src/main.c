@@ -57,7 +57,6 @@
 #include "gy89.h"
 #include "UBX.h"
 #include "nrf24l01.h"
-#include "../quateradapt/quateradaptc.h"
 #include "ADIS.h"
 #include "PID.h"
 #include "adapt_gps3.h"
