@@ -6,7 +6,7 @@ orientation filter, captures six RC PWM channels, and generates six ESC PWM
 outputs under FreeRTOS.
 
 Attitude PID control and motor mixing are present but disabled at runtime. The
-ESC outputs remain at their idle values; this firmware is not flight-ready.
+ESC outputs remain at their idle values.
 
 ## Requirements
 
@@ -51,18 +51,12 @@ make -C Debug all
 
 ## Flash and run
 
-1. Remove all propellers and disconnect motor power.
-2. Connect the configured IMU and ST-LINK.
-3. Flash the `Debug` image from STM32CubeIDE and reset the board.
-4. Use USART1 at 576000 baud, 8-N-1, to read orientation and navigation
+1. Connect the configured IMU and ST-LINK.
+2. Flash the `Debug` image from STM32CubeIDE and reset the board.
+3. Use USART1 at 576000 baud, 8-N-1, to read orientation and navigation
    telemetry.
-5. If GPS is used, connect it to USART2 at 9600 baud, 8-N-1.
+4. If GPS is used, connect it to USART2 at 9600 baud, 8-N-1.
 
 The Madgwick filter uses GY-89 accelerometer and gyroscope data at a nominal
 100 Hz. Roll and pitch are gravity-corrected; yaw is gyro-integrated and will
 drift because the magnetometer is not connected to the filter.
-
-PWM peripherals start at idle pulse widths, but motor control, arming,
-failsafe behavior, sensor orientation, and emergency shutdown have not been
-validated for flight. Keep propulsion power disconnected during software-only
-testing.
