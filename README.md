@@ -105,17 +105,20 @@ is disabled this path is not exercised by the runtime. A production deployment
 would need integration and validation of attitude feedback, motor mixing,
 arming, loss-of-signal handling, and emergency shutdown.
 
-## Code samples to review
+## Suggested reading order
 
-- [UBX streaming parser and message handlers](UBX/UBX.c)
-- [N8IS streaming parser](GPS/GPS.c)
-- [PID calculations and six-motor mixer](PID/PID.c)
-- [ADIS16488 SPI driver](ADIS/ADIS.c)
-- [GY-89 sensor drivers](gy89/gy89.c)
-- [nRF24L01 radio driver](NRF24L01/nrf24l01.c)
-- [FreeRTOS task orchestration and interrupt callbacks](Src/main.c)
-- [Madgwick C interface and Euler-angle conversion](Orientation/madgwick_adapter.cpp)
-- [Generalized Madgwick orientation filter](madgwick-orientation-filter/Madgwick.cpp)
+The following links point to project-specific integration, protocol, and driver
+code. STM32-generated files, FreeRTOS, CMSIS, HAL, and the Madgwick submodule are
+identified separately and are not presented as original code in this repository.
+
+1. [UBX streaming parser and message handlers](UBX/UBX.c)
+2. [N8IS streaming parser](GPS/GPS.c)
+3. [ADIS16488 SPI driver](ADIS/ADIS.c)
+4. [Madgwick C interface and Euler-angle conversion](Orientation/madgwick_adapter.cpp)
+5. [Application and FreeRTOS integration in the CubeMX entry point](Src/main.c)
+
+The [PID calculations and six-motor mixer](PID/PID.c) are retained as legacy
+experimental work; as noted above, they are not enabled by the runtime.
 
 ## Project structure
 
