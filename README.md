@@ -9,7 +9,7 @@ Experimental STM32 and FreeRTOS firmware for a six-motor flight controller.
 - PID attitude-control and six-motor mixer implementation (runtime disabled)
 - IMU and barometer support
 - GPS and UBX message processing
-- Quaternion-based orientation estimation
+- Madgwick quaternion-based orientation estimation
 - nRF24L01 radio communication
 - FreeRTOS-based task scheduling
 
@@ -94,8 +94,10 @@ the disabled PID thread uses 1000 microseconds.
    interrupts.
 3. Run sensor and navigation tasks to decode measurements and publish them through
    FreeRTOS queues and task notifications.
-4. Update the generated orientation/navigation estimator from inertial and GPS
-   measurements and transmit selected telemetry over UART.
+4. Update the Madgwick orientation filter from accelerometer and gyroscope
+   measurements and transmit selected telemetry over UART. Roll and pitch are
+   corrected by gravity; yaw is gyro-integrated because the magnetometer is not
+   yet connected to the filter.
 5. Keep the PID and nRF24 tasks disabled through `StartDefaultTask`.
 
 The PID/mixer code includes an arming-input check, but because the control call
@@ -112,6 +114,7 @@ arming, loss-of-signal handling, and emergency shutdown.
 - [GY-89 sensor drivers](gy89/gy89.c)
 - [nRF24L01 radio driver](NRF24L01/nrf24l01.c)
 - [FreeRTOS task orchestration and interrupt callbacks](Src/main.c)
+- [Madgwick C interface and Euler-angle conversion](Orientation/madgwick_adapter.cpp)
 - [Generalized Madgwick orientation filter](madgwick-orientation-filter/Madgwick.cpp)
 
 ## Project structure
@@ -121,9 +124,11 @@ arming, loss-of-signal handling, and emergency shutdown.
 - `ADIS/`, `gy89/` — inertial and environmental sensor drivers
 - `GPS/`, `UBX/` — navigation protocols and parsers
 - `NRF24L01/` — radio driver
-- `madgwick-orientation-filter/` — C++20/Eigen Git submodule containing the
-  replacement orientation filter; it is not yet connected to the legacy runtime
-- `adapt_gps3/` — generated navigation algorithm
+- `Orientation/` — C interface used by the FreeRTOS navigation task
+- `madgwick-orientation-filter/` — C++/Eigen Git submodule containing the active
+  orientation filter (the firmware build uses its C++17-compatible API)
+- `adapt_gps3/` — retained generated legacy navigation algorithm, not used by
+  the active runtime
 - `Middlewares/`, `Drivers/` — FreeRTOS, STM32 HAL, and CMSIS
 - `copter_GPs.ioc` — STM32CubeMX configuration
 
@@ -143,6 +148,9 @@ arming, loss-of-signal handling, and emergency shutdown.
 4. Select the repository directory and import the project.
 5. Build the `Debug` configuration.
 6. Connect an ST-LINK programmer and flash the firmware.
+
+The firmware configuration compiles the Madgwick sources as C++17 and requires
+the ARM GNU C++ compiler included with STM32CubeIDE.
 
 ### Command line
 

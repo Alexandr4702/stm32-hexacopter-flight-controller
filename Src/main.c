@@ -59,7 +59,7 @@
 #include "nrf24l01.h"
 #include "ADIS.h"
 #include "PID.h"
-#include "adapt_gps3.h"
+#include "madgwick_adapter.h"
 #include "GPS.h"
 
 typedef struct
@@ -82,6 +82,8 @@ typedef struct
 
 #define TX_ADR_WIDTH 3
 #define TX_PLOAD_WIDTH 32
+static const double radians_per_degree = 0.017453292519943295;
+static const double degrees_per_radian = 57.29577951308232;
 extern uint8_t TX_ADDRESS[TX_ADR_WIDTH];
 extern uint8_t RX_ADDRESS[TX_ADR_WIDTH];
 
@@ -1640,17 +1642,17 @@ void gy89_thread(void const *argument)
         A_GY.A.A_a[1] = data.accel[2];
         A_GY.A.A_a[2] = -data.accel[1];
 
-        A_GY.A.W_a[0] = data.omega[0] * M_PI / 180.0;
-        A_GY.A.W_a[1] = data.omega[2] * M_PI / 180.0;
-        A_GY.A.W_a[2] = -data.omega[1] * M_PI / 180.0;
+        A_GY.A.W_a[0] = data.omega[0] * radians_per_degree;
+        A_GY.A.W_a[1] = data.omega[2] * radians_per_degree;
+        A_GY.A.W_a[2] = -data.omega[1] * radians_per_degree;
 
         A_GY.Gy.A_gy[0] = -accel[2];
         A_GY.Gy.A_gy[1] = -accel[1];
         A_GY.Gy.A_gy[2] = -accel[0];
 
-        A_GY.Gy.W_gy[0] = -gyro[2] * M_PI / 180.0;
-        A_GY.Gy.W_gy[1] = -gyro[0] * M_PI / 180.0;
-        A_GY.Gy.W_gy[2] = gyro[1] * M_PI / 180.0;
+        A_GY.Gy.W_gy[0] = -gyro[2] * radians_per_degree;
+        A_GY.Gy.W_gy[1] = -gyro[0] * radians_per_degree;
+        A_GY.Gy.W_gy[2] = gyro[1] * radians_per_degree;
 
         xQueueSend(_orentation_queue, (void *)&A_GY, 0);
 
@@ -1660,6 +1662,7 @@ void gy89_thread(void const *argument)
 
 void nav_thread(void const *argument)
 {
+    static const double orientation_sample_period_s = 0.01;
 
     _orentation A_GY;
     navigation_mes mes;
@@ -1667,9 +1670,9 @@ void nav_thread(void const *argument)
     uint8_t str[500];
     int strlength = 0;
     BaseType_t ref;
-    adapt_gps3_initialize();
+    madgwick_adapter_reset();
 
-    double angle[3];
+    double angle[3] = {0.0, 0.0, 0.0};
     double SNS_V[3];
 
     uint32_t cnt = 0;
@@ -1685,7 +1688,7 @@ void nav_thread(void const *argument)
                         "SnsVN SnsVU SnsVE "    // 5
                         "gps3DFix "
                         "gpsLatit gpsLong gpsHighmm "
-                        "outPsi outTheta outGamma "
+                        "outRoll outPitch outYaw "
                         "gpsNewData gpsFix time timeExec \r\n");
     HAL_UART_Transmit(&huart1, str, strlength, 0xff);
 
@@ -1698,8 +1701,9 @@ void nav_thread(void const *argument)
         SNS_V[2] = mes._NAV_VELNED_.velE / 100.0;
         tick = xTaskGetTickCount();
 
-        adapt_gps3(A_GY.Gy.W_gy, A_GY.Gy.A_gy, SNS_V, mes._NAV_STATUS_.gpsFix == 3,
-                   mes._NAV_POSLLH_.latitude * M_PI / 180.0, &angle[1], &angle[2], &angle[0]);
+        /* The adapter leaves angle unchanged when a sensor sample is invalid. */
+        (void)madgwick_adapter_update(A_GY.Gy.A_gy, A_GY.Gy.W_gy, orientation_sample_period_s,
+                                      angle);
         tick1 = xTaskGetTickCount();
 
         strlength =
@@ -1720,10 +1724,11 @@ void nav_thread(void const *argument)
                     A_GY.Gy.W_gy[0], A_GY.Gy.W_gy[1], A_GY.Gy.W_gy[2],
 
                     SNS_V[0], SNS_V[1], SNS_V[2], mes._NAV_STATUS_.gpsFix == 3,
-                    mes._NAV_POSLLH_.latitude * M_PI / 180.0,
-                    mes._NAV_POSLLH_.longitude * M_PI / 180.0, mes._NAV_POSLLH_.Height_above_sea,
+                    mes._NAV_POSLLH_.latitude * radians_per_degree,
+                    mes._NAV_POSLLH_.longitude * radians_per_degree, mes._NAV_POSLLH_.Height_above_sea,
 
-                    angle[0] * 180.0 / M_PI, angle[1] * 180.0 / M_PI, angle[2] * 180.0 / M_PI, ref,
+                    angle[0] * degrees_per_radian, angle[1] * degrees_per_radian,
+                    angle[2] * degrees_per_radian, ref,
                     mes._NAV_STATUS_.gpsFix, cnt * 0.01, tick1 - tick);
 
         HAL_GPIO_WritePin(GPIOF, GPIO_PIN_3, mes._NAV_STATUS_.gpsFix == 3);
@@ -1735,7 +1740,6 @@ void nav_thread(void const *argument)
 void PID_thread(void const *argument)
 {
     uint16_t m_power[6] = {1000, 1000, 1000, 1000, 1000, 1000};
-    adapt_gps3_initialize();
 
     for (;;)
     {

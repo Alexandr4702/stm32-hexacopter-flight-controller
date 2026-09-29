@@ -38,8 +38,8 @@
 								<option id="gnu.c.compiler.option.debugging.level.1791321742" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated" />
 								<option id="gnu.c.compiler.option.include.paths.1593274287" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../Inc" />
+									<listOptionValue builtIn="false" value="../Orientation" />
 									<listOptionValue builtIn="false" value="../GPS" />
-									<listOptionValue builtIn="false" value="../adapt_gps3" />
 									<listOptionValue builtIn="false" value="../PID" />
 									<listOptionValue builtIn="false" value="../ADIS" />
 									<listOptionValue builtIn="false" value="../UBX" />
@@ -68,6 +68,9 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1453595500" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated" />
 								<option id="gnu.cpp.compiler.option.include.paths.216309517" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../Inc" />
+									<listOptionValue builtIn="false" value="../Orientation" />
+									<listOptionValue builtIn="false" value="../madgwick-orientation-filter" />
+									<listOptionValue builtIn="false" value="../madgwick-orientation-filter/third_party/eigen" />
 									<listOptionValue builtIn="false" value="../Drivers/STM32F7xx_HAL_Driver/Inc" />
 									<listOptionValue builtIn="false" value="../Drivers/STM32F7xx_HAL_Driver/Inc/Legacy" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32F7xx/Include" />
@@ -82,7 +85,7 @@
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER" />
 									<listOptionValue builtIn="false" value="STM32F746xx" />
 								</option>
-								<option id="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other.760399539" name="Other flags" superClass="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
+								<option id="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other.760399539" name="Other flags" superClass="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0 -std=gnu++17" valueType="string" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp.1271939520" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s.1243677226" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s" />
 							</tool>
@@ -126,8 +129,9 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="PID" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="UBX" />
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="adapt_gps3" />
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Orientation" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="gy89" />
+						<entry excluding="tests/|third_party/" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="madgwick-orientation-filter" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup" />
 					</sourceEntries>
 				</configuration>
@@ -171,6 +175,7 @@
 								<option id="gnu.c.compiler.option.debugging.level.1791321742" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated" />
 								<option id="gnu.c.compiler.option.include.paths.1593274287" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../Inc" />
+									<listOptionValue builtIn="false" value="../Orientation" />
 									<listOptionValue builtIn="false" value="../Drivers/STM32F7xx_HAL_Driver/Inc" />
 									<listOptionValue builtIn="false" value="../Drivers/STM32F7xx_HAL_Driver/Inc/Legacy" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32F7xx/Include" />
@@ -194,6 +199,9 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1453595500" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.debugging.level.max" valueType="enumerated" />
 								<option id="gnu.cpp.compiler.option.include.paths.216309517" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../Inc" />
+									<listOptionValue builtIn="false" value="../Orientation" />
+									<listOptionValue builtIn="false" value="../madgwick-orientation-filter" />
+									<listOptionValue builtIn="false" value="../madgwick-orientation-filter/third_party/eigen" />
 									<listOptionValue builtIn="false" value="../Drivers/STM32F7xx_HAL_Driver/Inc" />
 									<listOptionValue builtIn="false" value="../Drivers/STM32F7xx_HAL_Driver/Inc/Legacy" />
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32F7xx/Include" />
@@ -208,7 +216,7 @@
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER" />
 									<listOptionValue builtIn="false" value="STM32F746xx" />
 								</option>
-								<option id="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other.760399539" name="Other flags" superClass="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string" />
+								<option id="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other.760399539" name="Other flags" superClass="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0 -std=gnu++17" valueType="string" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp.1271939520" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.cpp" />
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s.1243677226" superClass="fr.ac6.managedbuild.tool.gnu.cross.cpp.compiler.input.s" />
 							</tool>
@@ -252,8 +260,9 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="PID" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="UBX" />
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="adapt_gps3" />
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Orientation" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="gy89" />
+						<entry excluding="tests/|third_party/" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="madgwick-orientation-filter" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup" />
 					</sourceEntries>
 				</configuration>
