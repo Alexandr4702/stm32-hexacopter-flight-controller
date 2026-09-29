@@ -35,7 +35,7 @@ so they must be validated for the actual frame, motors, propellers, battery, and
 sensor mounting.
 
 The PID implementation is not connected to the active runtime. `PID_thread`
-keeps all six outputs at the fixed idle value and does not call `PID__()`, and
+keeps all six outputs at the fixed idle value and does not call `pid_update()`, and
 `StartDefaultTask` terminates both `PID_thread` and the nRF24 task at startup
 before terminating itself. This preserves the repository's safe experimental
 state: the estimator and parser code can run, but attitude stabilization and

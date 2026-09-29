@@ -179,20 +179,16 @@ uint32_t pars_N8IS(uint8_t *ptr, uint16_t cnt_bytes, GPS_DATA *GPS_out)
             case 0x10:
                 flag_dec = 0;
                 continue;
-                // break;
             case 0x88:
                 flag_mess = 1;
                 flag_dec = 0;
                 continue;
-                // break;
             case 0xff:
                 flag_dec = 0;
                 continue;
-                // break;
             case 0x03:
                 flag_dec = 0;
                 continue;
-                // break;
             default:
                 flag_mess = 0;
                 flag_dec = 0;

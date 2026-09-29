@@ -7,18 +7,18 @@
 
 #include "l3gd20.h"
 
-uint8_t read_reg_l3gd20(I2C_HandleTypeDef *i2c, uint8_t reg)
+static uint8_t read_reg_l3gd20(I2C_HandleTypeDef *i2c, uint8_t reg)
 {
     HAL_I2C_Master_Transmit(i2c, l3gd20_addr, &reg, 1, 0xff);
     HAL_I2C_Master_Receive(i2c, l3gd20_addr, &reg, 1, 0xff);
     return reg;
 }
 
-void write_reg_l3gd20(I2C_HandleTypeDef *i2c, uint8_t reg, uint8_t parametr)
+static void write_reg_l3gd20(I2C_HandleTypeDef *i2c, uint8_t reg, uint8_t parameter)
 {
     uint8_t buffer[2];
     buffer[0] = reg;
-    buffer[1] = parametr;
+    buffer[1] = parameter;
     HAL_I2C_Master_Transmit(i2c, l3gd20_addr, (uint8_t *)buffer, 2, 1000);
 }
 

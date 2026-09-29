@@ -7,12 +7,12 @@
 
 #include "ADIS.h"
 
-#define max(x1, x2) x1 > x2 ? x1 : x2
-#define min(x1, x2) x1 < x2 ? x1 : x2
+#include <math.h>
+
 #define delta(x1, x2) x1 > x2 ? (x1 - x2) : (x2 - x1)
 
 extern SPI_HandleTypeDef hspi1;
-uint16_t spi_transmit[21] = {
+static const uint16_t spi_transmit[21] = {
     DUMMY_WORD // 0
     ,
     who_am_i // 1
@@ -56,9 +56,7 @@ uint16_t spi_transmit[21] = {
     Z_ACCL_LOW // 20
 };
 
-int16_t spi_recived[3];
-
-int16_t RAW_DATA[16];
+static int16_t RAW_DATA[16];
 
 void ADIS_RAW_DAT_CONVERT(ADIS_DATA *DATA)
 {
@@ -76,30 +74,10 @@ void ADIS_RAW_DAT_CONVERT(ADIS_DATA *DATA)
     DATA->M[1] = ((double)RAW_DATA[8 + 3]) * ((double)1.0E-8);
     DATA->M[2] = ((double)RAW_DATA[9 + 3]) * ((double)1.0E-8) * (-1);
 
-    // int16_t max_=max(RAW_DATA[10+3],DATA_P_pr);
-    // int16_t min_=min(RAW_DATA[10+3],DATA_P_pr);
-    /*
-    if(((RAW_DATA[10+3]==0x0000)||((max_-min_)>1000))&&(cnt!=0))
-    {
-    }
-    else
-    {
-        DATA->P=(double)RAW_DATA[10+3]*(double)4;
-    }
-    */
-
     DATA->P = (((RAW_DATA[10 + 3] == 0x0000) || (delta(RAW_DATA[10 + 3], DATA_P_pr) > 1000)) &&
                (cnt != 0))
                   ? DATA->P
                   : (double)RAW_DATA[10 + 3] * (double)4;
-    // DATA->P
-    // =((RAW_DATA[10+3]==0x0000)&&((max(RAW_DATA[10+3],DATA_P_pr)-min(RAW_DATA[10+3],DATA_P_pr))<1000))?DATA->P:((double)RAW_DATA[10+3])*((double)4);
-
-    // DATA->P	= (RAW_DATA[2]&0x0200)==0x0200?((double)RAW_DATA[10+3])*((double)4):DATA->P;
-    // DATA->P	=
-    // (RAW_DATA[2]&0x0200)==0x0200?(double)(RAW_DATA[10+3])*4.0+((double)((uint16_t)RAW_DATA[10+4]))*((double)6.103e-5):DATA->P;
-
-    // DATA->P =((RAW_DATA[10+3]==0x0000))?DATA->P:((double)RAW_DATA[10+3])*((double)4);
 
     DATA_P_pr = RAW_DATA[10 + 3];
     cnt++;
@@ -155,17 +133,17 @@ uint16_t read_reg_ADIS(uint16_t reg)
     return reg;
 }
 
-void write_reg_ADIS(uint16_t reg, uint16_t parametr)
+void write_reg_ADIS(uint16_t reg, uint16_t parameter)
 {
-    reg |= READWRITE_CMD | parametr;
+    reg |= READWRITE_CMD | parameter;
     CS_ON;
     HAL_SPI_Transmit(&hspi1, (uint8_t *)&reg, 1, 0xFFF);
     CS_OFF;
 }
-void write_ddword_ADIS(uint16_t reg, uint16_t parametr)
+static void write_ddword_ADIS(uint16_t reg, uint16_t parameter)
 {
-    uint16_t reg_1 = (reg + 0x0100) | READWRITE_CMD | (parametr >> 8);
-    reg |= 0x8000 | (parametr & 0x00FF);
+    uint16_t reg_1 = (reg + 0x0100) | READWRITE_CMD | (parameter >> 8);
+    reg |= 0x8000 | (parameter & 0x00FF);
     CS_ON;
     HAL_SPI_Transmit(&hspi1, (uint8_t *)&reg, 1, 0xFFF);
     HAL_SPI_Transmit(&hspi1, (uint8_t *)&reg_1, 1, 0xFFF);
@@ -223,16 +201,3 @@ void read_high_dword_accel_gyro_mag_ADIS_DMA(void)
     CS_ON;
     HAL_SPI_TransmitReceive_DMA(&hspi1, (uint8_t *)&spi_transmit[3], (uint8_t *)&RAW_DATA, 11);
 }
-
-/*
-void read_high_dword_accel_gyro_mag_ADIS_DPS_DMA(void)
-{
-    CS_OFF;
-    ADIS_DATA.omega[0] =((double)RAW_DATA[1])*((double) 0.02);
-    ADIS_DATA.omega[1] =((double)RAW_DATA[2])*((double) 0.02);
-    ADIS_DATA.omega[2] =((double)RAW_DATA[3])*((double) 0.02);
-    ADIS_DATA.accel[0] =((double)RAW_DATA[4])*((double) 0.0008);
-    ADIS_DATA.accel[1] =((double)RAW_DATA[5])*((double) 0.0008);
-    ADIS_DATA.accel[2] =((double)RAW_DATA[6])*((double) 0.0008);
-}
-*/

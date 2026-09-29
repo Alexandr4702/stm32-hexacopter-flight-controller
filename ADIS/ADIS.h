@@ -8,16 +8,8 @@
 #ifndef ADIS_H_
 #define ADIS_H_
 
-#include "stdio.h"
 #include "stm32f7xx_hal.h"
-#include "math.h"
 
-#define LD_PORT GPIOC
-#define LD1 GPIO_PIN_8 //
-#define LD1_ON HAL_GPIO_WritePin(LD_PORT, LD1, GPIO_PIN_SET)
-
-#define LD1_OFF HAL_GPIO_WritePin(LD_PORT, LD1, GPIO_PIN_RESET) // left
-// ————————————————
 #define CS_GPIO_PORT GPIOC
 #define CS_PIN GPIO_PIN_5
 #define CS_ON HAL_GPIO_WritePin(CS_GPIO_PORT, CS_PIN, GPIO_PIN_RESET)
@@ -25,10 +17,8 @@
 
 #define DUMMY_WORD ((uint16_t)0x0000)
 #define READWRITE_CMD 0x8000
-#define MULTIPLEBYTE_CMD 0x4000
-//_______________________
 #define who_am_i 0x7E00
-// data out_______________________________________________
+
 #define TEMP_OUT 0x0E00
 #define X_GYRO_LOW 0x1000
 #define X_GYRO_OUT 0x1200
@@ -47,7 +37,7 @@
 #define Z_MAGN_OUT 0x2C00
 #define BAROM_LOW 0x2E00
 #define BAROM_OUT 0x3000
-// setings_registrs____________________________//
+
 #define SYS_E_FLAG 0x0800
 #define FNCTIO_CTRL 0x0600
 #define FNCTIO_CTRL_1 0x0700
@@ -60,10 +50,7 @@
 #define GLOB_CMD 0x0200
 #define GLOB_CMD_1 0x0300
 #define PAGE_ID 0x0000
-//__________________________________________________________
 #define i_am 0x4068
-//__________________________________________________________
-//___setings________________________________________________________
 
 #define ID_PAGE_0 0x8000
 #define ID_PAGE_1 0x8001
@@ -99,7 +86,7 @@ typedef struct
 } ADIS_DATA_float;
 
 uint16_t read_reg_ADIS(uint16_t reg);
-void write_reg_ADIS(uint16_t reg, uint16_t parametr);
+void write_reg_ADIS(uint16_t reg, uint16_t parameter);
 void reset_ADIS(void);
 uint16_t init_ADIS(void);
 

@@ -146,7 +146,7 @@ void pars(uint8_t *ptr, uint16_t cnt_bytes, navigation_mes *mes)
             ident_cnt = (ptr[i] == 0x62) ? 2 : 0;
             part_message = class_;
             continue;
-        } // todo мы стали классом, но еще не факт что 62!! (ошибка не на что не влияет ))
+        }
         if (ident_cnt == 2)
         {
             switch (part_message)

@@ -177,9 +177,9 @@ void NRF24_Transmit(nrf_handle *nrf, uint8_t addr, uint8_t *pBuf, uint8_t bytes)
 
     HAL_GPIO_WritePin(nrf->PORT_CE, nrf->PIN_CE, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(nrf->PORT_CS, nrf->PIN_CS, GPIO_PIN_RESET);
-    HAL_SPI_Transmit(nrf->spi, &addr, 1, 1000); //???????? ????? ? ????
+    HAL_SPI_Transmit(nrf->spi, &addr, 1, 1000);
     DelayMicro(1);
-    HAL_SPI_Transmit(nrf->spi, pBuf, bytes, 1000); //???????? ?????? ? ?????
+    HAL_SPI_Transmit(nrf->spi, pBuf, bytes, 1000);
     HAL_GPIO_WritePin(nrf->PORT_CS, nrf->PIN_CS, GPIO_PIN_SET);
     HAL_GPIO_WritePin(nrf->PORT_CE, nrf->PIN_CE, GPIO_PIN_SET);
 }
@@ -189,14 +189,12 @@ uint8_t NRF24L01_Send(nrf_handle *nrf, uint8_t *pBuf)
     uint8_t status = 0x00, regval = 0x00;
     NRF24L01_TX_Mode(nrf);
     regval = NRF24_ReadReg(nrf, CONFIG);
-    //???? ?????? ???? ? ?????? ?????, ?? ???????? ???, ??????? ??? PWR_UP ? ???????? PRIM_RX
+    /* Power up the radio in transmit mode. */
     regval |= (1 << PWR_UP);
     regval &= ~(1 << PRIM_RX);
     NRF24_WriteReg(nrf, CONFIG, regval);
-    DelayMicro(150); //???????? ??????? 130 ???
-    //???????? ?????? ? ??????
+    DelayMicro(150);
     NRF24_Transmit(nrf, WR_TX_PLOAD, pBuf, TX_PLOAD_WIDTH);
-    // DelayMicro(70);
     HAL_GPIO_WritePin(nrf->PORT_CE, nrf->PIN_CE, GPIO_PIN_SET);
     DelayMicro(15); // minimum 10us high pulse (Page 21)
     HAL_GPIO_WritePin(nrf->PORT_CE, nrf->PIN_CE, GPIO_PIN_RESET);
@@ -217,7 +215,6 @@ uint8_t NRF24L01_Send(nrf_handle *nrf, uint8_t *pBuf)
     regval = NRF24_ReadReg(nrf, OBSERVE_TX);
     DelayMicro(70);
 
-    //?????? ? ????? ????????
     NRF24L01_RX_Mode(nrf);
     return regval & 0xF;
 }
@@ -227,25 +224,20 @@ uint8_t NRF24L01_Send_freertos_irq(nrf_handle *nrf, uint8_t *pBuf)
     nrf->interrupt_stat = 1;
     uint32_t signals;
 
-    //____
-
     uint8_t status = 0x00, regval = 0x00;
     NRF24L01_TX_Mode(nrf);
     regval = NRF24_ReadReg(nrf, CONFIG);
-    //???? ?????? ???? ? ?????? ?????, ?? ???????? ???, ??????? ??? PWR_UP ? ???????? PRIM_RX
+    /* Power up the radio in transmit mode. */
     regval |= (1 << PWR_UP);
     regval &= ~(1 << PRIM_RX);
     NRF24_WriteReg(nrf, CONFIG, regval);
-    DelayMicro(150); //???????? ??????? 130 ???
-    //???????? ?????? ? ??????
+    DelayMicro(150);
     NRF24_Transmit(nrf, WR_TX_PLOAD, pBuf, TX_PLOAD_WIDTH);
     HAL_GPIO_WritePin(nrf->PORT_CE, nrf->PIN_CE, GPIO_PIN_SET);
     DelayMicro(15); // minimum 10us high pulse (Page 21)
     HAL_GPIO_WritePin(nrf->PORT_CE, nrf->PIN_CE, GPIO_PIN_RESET);
 
     BaseType_t ret = xTaskNotifyWait(0, (uint32_t)0xffffffff, &signals, 250);
-
-    // while(HAL_GPIO_ReadPin(nrf->PORT_IRQ, nrf->PIN_IRQ) == GPIO_PIN_SET) {}
 
     status = NRF24_ReadReg(nrf, STATUS);
     if (status & TX_DS) // tx_ds == 0x20
@@ -261,7 +253,6 @@ uint8_t NRF24L01_Send_freertos_irq(nrf_handle *nrf, uint8_t *pBuf)
     regval = NRF24_ReadReg(nrf, OBSERVE_TX);
     DelayMicro(70);
 
-    //?????? ? ????? ????????
     NRF24L01_RX_Mode(nrf);
 
     return (regval & 0x0F) | ((ret == pdTRUE && signals == 0x02) ? 0x00 : 0xFF);
@@ -310,17 +301,14 @@ void NRF24L01_Send_NO_AA(nrf_handle *nrf, uint8_t *pBuf)
     nrf->interrupt_stat = 1;
     uint32_t signals;
 
-    //____
-
     uint8_t status = 0x00, regval = 0x00;
     NRF24L01_TX_Mode(nrf);
     regval = NRF24_ReadReg(nrf, CONFIG);
-    //???? ?????? ???? ? ?????? ?????, ?? ???????? ???, ??????? ??? PWR_UP ? ???????? PRIM_RX
+    /* Power up the radio in transmit mode. */
     regval |= (1 << PWR_UP);
     regval &= ~(1 << PRIM_RX);
     NRF24_WriteReg(nrf, CONFIG, regval);
-    DelayMicro(150); //???????? ??????? 130 ???
-    //???????? ?????? ? ??????
+    DelayMicro(150);
     NRF24_Transmit(nrf, WR_TX_PLOAD, pBuf, TX_PLOAD_WIDTH);
     HAL_GPIO_WritePin(nrf->PORT_CE, nrf->PIN_CE, GPIO_PIN_SET);
     DelayMicro(15); // minimum 10us high pulse (Page 21)
@@ -335,8 +323,6 @@ void NRF24L01_Send_NO_AA(nrf_handle *nrf, uint8_t *pBuf)
     }
 
     DelayMicro(70);
-
-    //?????? ? ????? ????????
 }
 
 void NRF24L01_Send_N_byte_no_aa(nrf_handle *nrf, uint8_t *ptr, uint16_t n)
@@ -424,12 +410,11 @@ void NRF24_ini_TX(nrf_handle *nrf)
     NRF24_WriteReg(nrf, FEATURE, 0);
     NRF24_WriteReg(nrf, DYNPD, 0);
     NRF24_WriteReg(nrf, STATUS, 0x70);   // Reset flags for IRQ
-    NRF24_WriteReg(nrf, RF_CH, 76);      // ??????? 2476 MHz
+    NRF24_WriteReg(nrf, RF_CH, 76);      // 2476 MHz
     NRF24_WriteReg(nrf, RF_SETUP, 0x06); // TX_PWR:0dBm, Datarate:1Mbps
     NRF24_Write_Buf(nrf, TX_ADDR, TX_ADDRESS, TX_ADR_WIDTH);
     NRF24_Write_Buf(nrf, RX_ADDR_P0, TX_ADDRESS, TX_ADR_WIDTH);
     NRF24_WriteReg(nrf, RX_PW_P0, TX_PLOAD_WIDTH); // Number of bytes in RX payload in data pipe 0
-    //???? ?????? ? ????? ????????
     NRF24L01_RX_Mode(nrf);
 }
 
@@ -448,11 +433,10 @@ void NRF24_ini_RX(nrf_handle *nrf)
     NRF24_WriteReg(nrf, FEATURE, 0);
     NRF24_WriteReg(nrf, DYNPD, 0);
     NRF24_WriteReg(nrf, STATUS, 0x70);   // Reset flags for IRQ
-    NRF24_WriteReg(nrf, RF_CH, 76);      // ??????? 2476 MHz
+    NRF24_WriteReg(nrf, RF_CH, 76);      // 2476 MHz
     NRF24_WriteReg(nrf, RF_SETUP, 0x06); // TX_PWR:0dBm, Datarate:1Mbps
     NRF24_Write_Buf(nrf, TX_ADDR, TX_ADDRESS, TX_ADR_WIDTH);
     NRF24_Write_Buf(nrf, RX_ADDR_P1, TX_ADDRESS, TX_ADR_WIDTH);
     NRF24_WriteReg(nrf, RX_PW_P1, TX_PLOAD_WIDTH); // Number of bytes in RX payload in data pipe 1
-    //???? ?????? ? ????? ????????
     NRF24L01_RX_Mode(nrf);
 }

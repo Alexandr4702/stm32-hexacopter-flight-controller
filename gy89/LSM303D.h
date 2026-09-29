@@ -48,12 +48,6 @@
 #define CTRL2_8g 0x18
 #define CTRL2_16g 0x20
 
-#define CTRL2_2g 0x00
-#define CTRL2_4g 0x08
-#define CTRL2_6g 0x10
-#define CTRL2_8g 0x18
-#define CTRL2_16g 0x20
-
 #define CTRL2_ABW_773 0x00
 #define CTRL2_ABW_194 0x40
 #define CTRL2_ABW_362 0x80

@@ -11,26 +11,28 @@
 
 extern QueueHandle_t copter_queue;
 
-const float dt = 0.01f;
+static const float dt = 0.01f;
 
 /*motor */
 
-#define c_0 0.12 /* 180/500 */
-#define c_1 0.06 /*30/500   */
-#define c_2 0.06 /*30/500   */
+static const float roll_scale = 0.12f;  /* 180 / 500 */
+static const float pitch_scale = 0.06f; /* 30 / 500 */
+static const float yaw_scale = 0.06f;   /* 30 / 500 */
 
-void PWM_TO_ANGLE(__IO uint16_t *uhDutyCycle, float *angle)
+static void pwm_to_angle(const uint16_t *rc_pulse, float *angle)
 {
-    angle[1] = (uhDutyCycle[3] - 1500) * c_0; // omega_psi 		y
-    angle[2] = (uhDutyCycle[0] - 1500) * c_1; // theta 	z
-    angle[0] = (uhDutyCycle[1] - 1500) * c_2; // gamma 	x
+    angle[1] = (rc_pulse[3] - 1500) * roll_scale;
+    angle[2] = (rc_pulse[0] - 1500) * pitch_scale;
+    angle[0] = (rc_pulse[1] - 1500) * yaw_scale;
 }
 
-void PID__(__IO uint16_t *uhDutyCycle, double *current_angle, uint16_t *motor_power)
+static void angle_to_pwm(const float *pid, const uint16_t *rc_pulse, uint16_t *motor_power);
+
+void pid_update(const uint16_t *rc_pulse, const double *current_angle, uint16_t *motor_power)
 {
-    static float P_c[3] = {4.0f, 4.3f, 3.0f};
-    static float I_c[3] = {0.8f, 0.0f, 0.80f};
-    static float D_c[3] = {0.9f, 0.0f, 1.0f};
+    static const float P_c[3] = {4.0f, 4.3f, 3.0f};
+    static const float I_c[3] = {0.8f, 0.0f, 0.80f};
+    static const float D_c[3] = {0.9f, 0.0f, 1.0f};
     static float angle[3] = {0.0f, 0.0f, 0.0f};
     static float p_error[3] = {0.0f, 0.0f, 0.0f};
     float error[3];
@@ -41,7 +43,7 @@ void PID__(__IO uint16_t *uhDutyCycle, double *current_angle, uint16_t *motor_po
 
     static uint32_t cnt = 0;
 
-    PWM_TO_ANGLE(uhDutyCycle, angle);
+    pwm_to_angle(rc_pulse, angle);
 
     error[0] = angle[0] - (float)current_angle[0];
     error[1] = angle[1] - (float)current_angle[1];
@@ -75,7 +77,7 @@ void PID__(__IO uint16_t *uhDutyCycle, double *current_angle, uint16_t *motor_po
     PID[1] = P[1] * P_c[1] + I[1] * I_c[1] + D[1] * D_c[1];
     PID[2] = P[2] * P_c[2] + I[2] * I_c[2] + D[2] * D_c[2];
 
-    angle_to_pwm(PID, uhDutyCycle, motor_power);
+    angle_to_pwm(PID, rc_pulse, motor_power);
 
     copter cp = {0};
 
@@ -94,13 +96,13 @@ void PID__(__IO uint16_t *uhDutyCycle, double *current_angle, uint16_t *motor_po
     memcpy(p_error, error, sizeof(error));
 }
 
-void angle_to_pwm(float *PID, __IO uint16_t *uhDutyCycle, uint16_t *motor_power)
+static void angle_to_pwm(const float *pid, const uint16_t *rc_pulse, uint16_t *motor_power)
 {
     const uint16_t stopped_pwm = 1000;
     const float minimum_pwm = 1150.0f;
     const float maximum_pwm = 1950.0f;
 
-    if ((uhDutyCycle[2] < 1000U) || (uhDutyCycle[2] > 2000U))
+    if ((rc_pulse[2] < 1000U) || (rc_pulse[2] > 2000U))
     {
         for (uint8_t i = 0; i < 6; i++)
         {
@@ -110,12 +112,12 @@ void angle_to_pwm(float *PID, __IO uint16_t *uhDutyCycle, uint16_t *motor_power)
     }
 
     float mixed_power[6];
-    mixed_power[0] = uhDutyCycle[2] + PID[1] + PID[2] - PID[0];
-    mixed_power[1] = uhDutyCycle[2] - PID[1] - PID[0];
-    mixed_power[2] = uhDutyCycle[2] + PID[1] - PID[2] - PID[0];
-    mixed_power[3] = uhDutyCycle[2] - PID[1] - PID[2] + PID[0];
-    mixed_power[4] = uhDutyCycle[2] + PID[1] + PID[0];
-    mixed_power[5] = uhDutyCycle[2] - PID[1] + PID[2] + PID[0];
+    mixed_power[0] = rc_pulse[2] + pid[1] + pid[2] - pid[0];
+    mixed_power[1] = rc_pulse[2] - pid[1] - pid[0];
+    mixed_power[2] = rc_pulse[2] + pid[1] - pid[2] - pid[0];
+    mixed_power[3] = rc_pulse[2] - pid[1] - pid[2] + pid[0];
+    mixed_power[4] = rc_pulse[2] + pid[1] + pid[0];
+    mixed_power[5] = rc_pulse[2] - pid[1] + pid[2] + pid[0];
 
     for (uint8_t i = 0; i < 6; i++)
     {
@@ -131,7 +133,7 @@ void angle_to_pwm(float *PID, __IO uint16_t *uhDutyCycle, uint16_t *motor_power)
         motor_power[i] = (uint16_t)limited_power;
     }
 
-    if (uhDutyCycle[4] < 1500)
+    if (rc_pulse[4] < 1500)
     {
         motor_power[0] = 1100; // motor_1;
         motor_power[1] = 1100; // motor_2

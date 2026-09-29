@@ -7,42 +7,41 @@
 
 #include "bmp180.h"
 
-short AC1;
-short AC2;
-short AC3;
-unsigned short AC4;
-unsigned short AC5;
-unsigned short AC6;
-short B1;
-short B2;
-short MB;
-short MC;
-short MD;
+static short AC1;
+static short AC2;
+static short AC3;
+static unsigned short AC4;
+static unsigned short AC5;
+static unsigned short AC6;
+static short B1;
+static short B2;
+static short MB;
+static short MC;
+static short MD;
 
-long X1;
-long X2;
-long B5;
+static long X1;
+static long X2;
+static long B5;
 
-uint8_t oss = 0;
-long B6;
-long X3;
-long B3;
-unsigned long B4;
-unsigned long B7;
-long p;
+static long B6;
+static long X3;
+static long B3;
+static unsigned long B4;
+static unsigned long B7;
+static long p;
 
-uint8_t read_reg_bmp180(I2C_HandleTypeDef *i2c, uint8_t reg)
+static uint8_t read_reg_bmp180(I2C_HandleTypeDef *i2c, uint8_t reg)
 {
     HAL_I2C_Master_Transmit(i2c, bmp180_addr, &reg, 1, 0xff);
     HAL_I2C_Master_Receive(i2c, bmp180_addr, &reg, 1, 0xff);
     return reg;
 }
 
-void write_reg_bmp180(I2C_HandleTypeDef *i2c, uint8_t reg, uint8_t parametr)
+static void write_reg_bmp180(I2C_HandleTypeDef *i2c, uint8_t reg, uint8_t parameter)
 {
     uint8_t buffer[2];
     buffer[0] = reg;
-    buffer[1] = parametr;
+    buffer[1] = parameter;
     HAL_I2C_Master_Transmit(i2c, bmp180_addr, (uint8_t *)buffer, 2, 1000);
 }
 
@@ -111,55 +110,4 @@ uint8_t Init_bmp180(I2C_HandleTypeDef *i2c)
     p = p + (X1 + X2 + 3791) / 4;
 
     return 1;
-}
-
-double get_pressure(I2C_HandleTypeDef *i2c)
-{
-    uint8_t buf[2];
-    uint8_t reg = 0xaa;
-
-    write_reg_bmp180(i2c, 0xf4, 0x2e);
-    HAL_Delay(5);
-    reg = 0xf6;
-    HAL_I2C_Master_Transmit(i2c, bmp180_addr, &reg, 1, 0xff);
-    HAL_I2C_Master_Receive(i2c, bmp180_addr, buf, 2, 0xff);
-    long UT = (buf[0] << 8) | buf[1];
-    //----------------------------------------------------------------------------------------
-    uint8_t oss = 0;
-    write_reg_bmp180(i2c, 0xf4, 0x34 + (oss << 6));
-    HAL_Delay(5);
-    HAL_I2C_Master_Transmit(i2c, bmp180_addr, &reg, 1, 0xff);
-    HAL_I2C_Master_Receive(i2c, bmp180_addr, buf, 2, 0xff);
-    long UP = (buf[0] << 8) | buf[1];
-    //-----------------------------------------------------------------------------------------------------
-    X1 = (UT - AC6) * AC5 / 32768;
-    X2 = MC * 2048 / (X1 + MD);
-    B5 = X1 + X2;
-    // long T=(X1+X2+8)/16;
-    //-----------------------------------------------------------------------------------------------------
-
-    B6 = B5 - 4000;
-    X1 = B2 * B6 * B6 / 4096 / 2048;
-    X2 = AC2 * B6 / 2048;
-    X3 = X1 + X2;
-    B3 = ((((AC1 * 4) + X3) << oss) + 2) / 4;
-    X1 = AC3 * B6 / 8192;
-    X2 = B1 * B6 * B6 / 4096 / 65536;
-    X3 = (X1 + X2 + 2) / 4;
-    B4 = AC4 * (unsigned long)(X3 + 32768) / 32768;
-    B7 = ((unsigned long)UP - B3) * (50000 >> oss);
-    if (B7 < 0x80000000)
-    {
-        p = (B7 * 2) / B4;
-    }
-    else
-    {
-        p = (B7 / B4) * 2;
-    }
-    X1 = p / 256 * p / 256;
-    X1 = X1 * 3038 / 65536;
-    X2 = (-7357 * p) / 65536;
-    p = p + (X1 + X2 + 3791) / 4;
-
-    return p;
 }
