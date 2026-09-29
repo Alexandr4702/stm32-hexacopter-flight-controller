@@ -7,8 +7,6 @@
 
 #include "bmp180.h"
 
-#include <math.h>
-
 short AC1;
 short AC2;
 short AC3;
@@ -50,7 +48,6 @@ void write_reg_bmp180(I2C_HandleTypeDef *i2c, uint8_t reg, uint8_t parametr)
 
 uint8_t Init_bmp180(I2C_HandleTypeDef *i2c)
 {
-    uint8_t str[100];
     if (read_reg_bmp180(i2c, 0xd0) != 0x55)
         return 0;
 
@@ -88,7 +85,6 @@ uint8_t Init_bmp180(I2C_HandleTypeDef *i2c)
     X1 = (UT - AC6) * AC5 / 32768;
     X2 = MC * 2048 / (X1 + MD);
     B5 = X1 + X2;
-    long T = (X1 + X2 + 8) / 16;
     //-----------------------------------------------------------------------------------------------------
 
     B6 = B5 - 4000;
@@ -113,8 +109,6 @@ uint8_t Init_bmp180(I2C_HandleTypeDef *i2c)
     X1 = X1 * 3038 / 65536;
     X2 = (-7357 * p) / 65536;
     p = p + (X1 + X2 + 3791) / 4;
-
-    double altitude = 44330.0 * (1 - pow((double)p / (double)101325, 1 / 5.255));
 
     return 1;
 }
@@ -167,6 +161,5 @@ double get_pressure(I2C_HandleTypeDef *i2c)
     X2 = (-7357 * p) / 65536;
     p = p + (X1 + X2 + 3791) / 4;
 
-    // double altitude =44330.0*(1-pow((double)p/(double)101325,1/5.255));
     return p;
 }
