@@ -42,7 +42,6 @@
 									<listOptionValue builtIn="false" value="../adapt_gps3" />
 									<listOptionValue builtIn="false" value="../PID" />
 									<listOptionValue builtIn="false" value="../ADIS" />
-									<listOptionValue builtIn="false" value="../quateradapt" />
 									<listOptionValue builtIn="false" value="../UBX" />
 									<listOptionValue builtIn="false" value="../gy89" />
 									<listOptionValue builtIn="false" value="../NRF24L01" />
@@ -129,7 +128,6 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="UBX" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="adapt_gps3" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="gy89" />
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="quateradapt" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup" />
 					</sourceEntries>
 				</configuration>
@@ -256,7 +254,6 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="UBX" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="adapt_gps3" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="gy89" />
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="quateradapt" />
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup" />
 					</sourceEntries>
 				</configuration>

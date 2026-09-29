@@ -112,6 +112,7 @@ arming, loss-of-signal handling, and emergency shutdown.
 - [GY-89 sensor drivers](gy89/gy89.c)
 - [nRF24L01 radio driver](NRF24L01/nrf24l01.c)
 - [FreeRTOS task orchestration and interrupt callbacks](Src/main.c)
+- [Generalized Madgwick orientation filter](madgwick-orientation-filter/Madgwick.cpp)
 
 ## Project structure
 
@@ -120,8 +121,8 @@ arming, loss-of-signal handling, and emergency shutdown.
 - `ADIS/`, `gy89/` — inertial and environmental sensor drivers
 - `GPS/`, `UBX/` — navigation protocols and parsers
 - `NRF24L01/` — radio driver
-- `quateradapt/` — compatibility stub for a legacy estimator whose
-  implementation is intentionally omitted from this code sample
+- `madgwick-orientation-filter/` — C++20/Eigen Git submodule containing the
+  replacement orientation filter; it is not yet connected to the legacy runtime
 - `adapt_gps3/` — generated navigation algorithm
 - `Middlewares/`, `Drivers/` — FreeRTOS, STM32 HAL, and CMSIS
 - `copter_GPs.ioc` — STM32CubeMX configuration
@@ -131,7 +132,13 @@ arming, loss-of-signal handling, and emergency shutdown.
 ### STM32CubeIDE
 
 1. Install STM32CubeIDE with STM32F7 support.
-2. Clone this repository.
+2. Clone this repository with submodules:
+
+   ```sh
+   git clone --recurse-submodules https://github.com/Alexandr4702/stm32-hexacopter-flight-controller.git
+   ```
+
+   For an existing checkout, run `git submodule update --init --recursive`.
 3. In STM32CubeIDE, select **File → Import → Existing Projects into Workspace**.
 4. Select the repository directory and import the project.
 5. Build the `Debug` configuration.

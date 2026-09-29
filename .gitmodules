@@ -1,0 +1,3 @@
+[submodule "madgwick-orientation-filter"]
+	path = madgwick-orientation-filter
+	url = https://github.com/Alexandr4702/madgwick-orientation-filter.git
